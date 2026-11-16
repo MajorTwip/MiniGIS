@@ -1,0 +1,11 @@
+# Dev override (Docker Desktop on Windows): publishes the port and uses a named
+# volume, because bind-mounted folders on Windows are unreliable for SQLite WAL.
+services:
+  minigis:
+    ports:
+      - "8080:8080"
+    volumes:
+      - minigis-data:/data
+      - ./config:/config:ro
+volumes:
+  minigis-data:

@@ -1,0 +1,24 @@
+{
+  "name": "@minigis/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "check": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "@minigis/shared": "*",
+    "ol": "^10.3.0",
+    "proj4": "^2.15.0"
+  },
+  "devDependencies": {
+    "@types/geojson": "^7946.0.16",
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "svelte": "^5.0.0",
+    "svelte-check": "^4.0.0",
+    "vite": "^6.0.0"
+  }
+}

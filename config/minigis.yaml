@@ -1,0 +1,45 @@
+app:
+  title: "MiniGIS Brenzikofen"
+map:
+  # default view in EPSG:2056 (approximate; verify against the commune boundary)
+  center: [2613500, 1185100]
+  zoom: 15
+basemaps:
+  - id: farbe
+    title: Landeskarte farbig
+    layer: ch.swisstopo.pixelkarte-farbe
+    default: true
+  - id: grau
+    title: Landeskarte grau
+    layer: ch.swisstopo.pixelkarte-grau
+  - id: luftbild
+    title: Luftbild
+    layer: ch.swisstopo.swissimage
+tree:
+  - group: Umwelt
+    children:
+      - layer: abfallcontainer
+      - layer: neophyten
+layers:
+  abfallcontainer:
+    title: Abfallcontainer
+    geometry: point            # point | line | polygon
+    photos: true
+    style: { color: "#2e7d32", radius: 7 }
+    label: nummer              # optional attribute shown as map label / list title
+    attributes:
+      - { name: nummer,  label: Nummer,      type: text,    required: true }
+      - { name: typ,     label: Typ,         type: select,  options: [Glas, Alu/Blech, Altöl, Grüngut, Papier] }
+      - { name: volumen, label: "Volumen (l)", type: integer }
+      - { name: geleert, label: Letzte Leerung, type: date }
+      - { name: bemerkung, label: Bemerkung, type: textarea }
+  neophyten:
+    title: Neophyten
+    geometry: polygon
+    photos: true
+    style: { color: "#c62828", fill: "rgba(198,40,40,0.25)" }
+    attributes:
+      - { name: art,      label: Art,       type: select, options: [Drüsiges Springkraut, Kanadische Goldrute, Japanischer Staudenknöterich, Andere] }
+      - { name: gefunden, label: Gefunden am, type: date, required: true }
+      - { name: bekaempft, label: Bekämpft, type: boolean }
+      - { name: bemerkung, label: Bemerkung, type: textarea }

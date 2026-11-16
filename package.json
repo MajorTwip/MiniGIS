@@ -1,0 +1,22 @@
+{
+  "name": "minigis",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "dev": "npm run dev --workspaces --if-present",
+    "e2e": "playwright test --trace off"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
