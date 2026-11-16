@@ -131,6 +131,8 @@ Layer ids and attribute names match `^[a-z][a-z0-9_]*$`.
 | `style.color` | CSS colour | | stroke / point colour |
 | `style.fill` | CSS colour, optional | | polygon fill |
 | `style.radius` | number > 0, optional | | point radius in px |
+| `style.symbolBy` | attribute name, optional | | point layers: a `select` attribute whose value picks the symbol |
+| `style.symbols` | map value → `{ shape, color }`, optional | | symbol per value; `shape` is one of `circle`, `square`, `diamond`, `triangle`, `triangle-down`, `pentagon`, `hexagon`, `star`. Values without an entry are drawn as a circle in `style.color`. The layer tree shows a legend while the layer is visible. |
 | `label` | attribute name, optional | | attribute shown as map label and panel title |
 | `attributes` | list | | see below |
 

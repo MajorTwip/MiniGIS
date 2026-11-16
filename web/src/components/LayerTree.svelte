@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { LayerDef, TreeNode } from '@minigis/shared';
+  import { legendEntries } from '../map/vectorLayers';
+  import LegendSwatch from './LegendSwatch.svelte';
 
   let {
     tree,
@@ -52,18 +54,28 @@
         </li>
       {:else}
         {@const def = layers[node.layer]}
-        <li class="layer">
-          <label>
-            <input type="checkbox" checked={visible.has(node.layer)} onchange={() => ontoggle(node.layer)} />
-            {def?.title ?? node.layer}
-          </label>
-          <button
-            class="edit"
-            class:active={editLayer === node.layer}
-            title={editLayer === node.layer ? 'Bearbeitung beenden' : 'Ebene bearbeiten'}
-            aria-pressed={editLayer === node.layer}
-            onclick={() => toggleEdit(node.layer)}>✎</button
-          >
+        {@const legend = def ? legendEntries(def) : []}
+        <li>
+          <div class="layer">
+            <label>
+              <input type="checkbox" checked={visible.has(node.layer)} onchange={() => ontoggle(node.layer)} />
+              {def?.title ?? node.layer}
+            </label>
+            <button
+              class="edit"
+              class:active={editLayer === node.layer}
+              title={editLayer === node.layer ? 'Bearbeitung beenden' : 'Ebene bearbeiten'}
+              aria-pressed={editLayer === node.layer}
+              onclick={() => toggleEdit(node.layer)}>✎</button
+            >
+          </div>
+          {#if visible.has(node.layer) && legend.length > 0}
+            <ul class="legend" aria-label="Legende {def.title}">
+              {#each legend as entry (entry.value)}
+                <li><LegendSwatch symbol={entry.symbol} />{entry.value}</li>
+              {/each}
+            </ul>
+          {/if}
         </li>
       {/if}
     {/each}

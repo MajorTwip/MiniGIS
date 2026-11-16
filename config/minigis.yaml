@@ -25,11 +25,24 @@ layers:
     title: Abfallcontainer
     geometry: point            # point | line | polygon
     photos: true
-    style: { color: "#2e7d32", radius: 7 }
+    style:
+      color: "#2e7d32"
+      radius: 7
+      symbolBy: typ              # one symbol per container type
+      symbols:
+        Glas:            { shape: circle,        color: "#2e7d32" }
+        Alu/Blech:       { shape: square,        color: "#78909c" }
+        Altöl:           { shape: triangle,      color: "#4e342e" }
+        Grüngut:         { shape: pentagon,      color: "#7cb342" }
+        Papier:          { shape: square,        color: "#1e88e5" }
+        Gebührensäcke:   { shape: diamond,       color: "#fbc02d" }
+        Abfall Gemeinde: { shape: hexagon,       color: "#e53935" }
+        Neophyten:       { shape: star,          color: "#d81b60" }
+        Schlamm:         { shape: triangle-down, color: "#8d6e63" }
     label: nummer              # optional attribute shown as map label / list title
     attributes:
       - { name: nummer,  label: Nummer,      type: text,    required: true }
-      - { name: typ,     label: Typ,         type: select,  options: [Glas, Alu/Blech, Altöl, Grüngut, Papier] }
+      - { name: typ,     label: Typ,         type: select,  options: [Glas, Alu/Blech, Altöl, Grüngut, Papier, Gebührensäcke, Abfall Gemeinde, Neophyten, Schlamm] }
       - { name: volumen, label: "Volumen (l)", type: integer }
       - { name: geleert, label: Letzte Leerung, type: date }
       - { name: bemerkung, label: Bemerkung, type: textarea }

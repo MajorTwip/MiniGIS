@@ -51,10 +51,32 @@ const attributeSchema = z
   });
 export type AttributeDef = z.infer<typeof attributeSchema>;
 
+export const SYMBOL_SHAPES = [
+  'circle',
+  'square',
+  'diamond',
+  'triangle',
+  'triangle-down',
+  'pentagon',
+  'hexagon',
+  'star',
+] as const;
+export type SymbolShape = (typeof SYMBOL_SHAPES)[number];
+
+const symbolSchema = z.object({
+  shape: z.enum(SYMBOL_SHAPES),
+  color: z.string(),
+});
+export type SymbolDef = z.infer<typeof symbolSchema>;
+
 const styleSchema = z.object({
   color: z.string(),
   fill: z.string().optional(),
   radius: z.number().positive().optional(),
+  /** Point layers: pick the symbol by the value of this select attribute. */
+  symbolBy: z.string().optional(),
+  /** Symbol per attribute value; values without an entry use `color` as a circle. */
+  symbols: z.record(z.string(), symbolSchema).optional(),
 });
 
 const layerSchema = z
@@ -78,6 +100,26 @@ const layerSchema = z
       }
       seen.add(a.name);
     });
+    if (l.style.symbolBy !== undefined) {
+      const attr = l.attributes.find((a) => a.name === l.style.symbolBy);
+      if (!attr || attr.type !== 'select') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['style', 'symbolBy'],
+          message: `symbolBy "${l.style.symbolBy}" must name a select attribute of this layer`,
+        });
+      } else {
+        for (const value of Object.keys(l.style.symbols ?? {})) {
+          if (!attr.options?.includes(value)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['style', 'symbols', value],
+              message: `"${value}" is not an option of ${attr.name}`,
+            });
+          }
+        }
+      }
+    }
     if (l.label !== undefined && !seen.has(l.label)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
