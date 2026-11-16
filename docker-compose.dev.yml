@@ -2,6 +2,8 @@
 # volume, because bind-mounted folders on Windows are unreliable for SQLite WAL.
 services:
   minigis:
+    build: .
+    image: minigis:dev
     ports:
       - "8080:8080"
     volumes:

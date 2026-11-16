@@ -1,7 +1,7 @@
 services:
   minigis:
-    build: .
-    image: minigis:latest
+    # Published by .github/workflows/build_push.yml on every push to main.
+    image: ghcr.io/majortwip/minigis:latest
     restart: unless-stopped
     volumes:
       - ./data:/data
