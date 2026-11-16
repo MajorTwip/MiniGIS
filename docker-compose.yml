@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./data:/data
-      - ./config:/config:ro
+      - ./config:/config
     # No published port: the service is reached through Traefik (Authentik protects it).
     # labels:
     #   - traefik.enable=true

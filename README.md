@@ -41,7 +41,7 @@ It creates a container `E2E-1` in the real data volume, reloads and selects it a
 
 ## Run (prod, Linux + Traefik + Authentik)
 
-1. Put `config/minigis.yaml` and an empty `data/` directory next to `docker-compose.yml`. The image runs as user `node` (uid 1000), so `chown 1000:1000 data`.
+1. Create empty `data/` and `config/` directories next to `docker-compose.yml`. The image runs as user `node` (uid 1000), so `chown 1000:1000 data config`. On first start, if `config/minigis.yaml` is missing, the app copies the bundled default there for you to edit; then restart. If the config folder is mounted read-only, the app logs a warning and runs with the built-in default.
 2. In `docker-compose.yml` uncomment the Traefik labels (router rule `Host(\`minigis.example.ch\`)`, `entrypoints=websecure`, `tls=true`, `middlewares=authentik@docker`, `loadbalancer.server.port=8080`) and attach the service to the Traefik network.
 3. `docker compose pull && docker compose up -d`. This uses the image `ghcr.io/majortwip/minigis:latest`, which GitHub Actions builds on every push to `main`. No port is published; Traefik is the only way in. To update later, run the same command again.
 

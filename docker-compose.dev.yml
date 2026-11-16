@@ -8,6 +8,6 @@ services:
       - "8080:8080"
     volumes:
       - minigis-data:/data
-      - ./config:/config:ro
+      - ./config:/config
 volumes:
   minigis-data:

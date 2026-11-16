@@ -25,10 +25,12 @@ COPY web/package.json web/
 RUN --mount=type=secret,id=cabundle,required=false \
     if [ -f /run/secrets/cabundle ]; then export NPM_CONFIG_CAFILE=/run/secrets/cabundle NODE_EXTRA_CA_CERTS=/run/secrets/cabundle; fi; npm ci --omit=dev -w @minigis/shared -w @minigis/server \
  && npm cache clean --force \
- && mkdir -p /data /config && chown node:node /data
+ && mkdir -p /data /config && chown node:node /data /config
 COPY --from=build /app/shared/dist shared/dist
 COPY --from=build /app/server/dist server/dist
 COPY --from=build /app/web/dist web/dist
+# default config, copied to /config/minigis.yaml on first start if none exists
+COPY config/minigis.yaml config/minigis.yaml
 USER node
 EXPOSE 8080
 VOLUME /data
