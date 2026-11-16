@@ -95,13 +95,11 @@
 <style>
   h2 { font-size: 16px; margin: 0 0 12px; }
   .field { display: flex; flex-direction: column; margin-bottom: 10px; }
-  label { font-size: 12px; color: #555; margin-bottom: 2px; }
+  label { font-size: 12px; color: var(--muted-foreground); margin-bottom: 3px; }
   .check { flex-direction: row; display: flex; gap: 6px; align-items: center; font-size: 14px; color: inherit; }
-  .req { color: #b00020; }
-  input:not([type='checkbox']), select, textarea { font: inherit; padding: 4px 6px; border: 1px solid #bbb; border-radius: 3px; }
-  .invalid input:not([type='checkbox']), .invalid select, .invalid textarea { border-color: #b00020; }
-  .msg { color: #b00020; font-size: 12px; margin-top: 2px; }
-  .banner { background: #fdecea; color: #b00020; padding: 6px 8px; border-radius: 3px; font-size: 13px; }
+  .req { color: var(--destructive-foreground); }
+  .invalid input:not([type='checkbox']), .invalid select, .invalid textarea { border-color: var(--destructive); }
+  .msg { color: var(--destructive-foreground); font-size: 12px; margin-top: 2px; }
+  .banner { background: var(--destructive-soft); color: var(--destructive-foreground); padding: 6px 10px; border-radius: var(--radius-sm); font-size: 13px; }
   .actions { display: flex; gap: 8px; margin-top: 16px; }
-  button { padding: 6px 14px; font: inherit; cursor: pointer; }
 </style>

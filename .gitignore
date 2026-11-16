@@ -1,6 +1,29 @@
+# dependencies and build output
 node_modules/
 dist/
-.superpowers/
+*.tsbuildinfo
+
+# runtime data (GeoPackage, photos) – never commit
 data/
+*.gpkg
+*.gpkg-wal
+*.gpkg-shm
+
+# test output
 test-results/
 playwright-report/
+blob-report/
+coverage/
+
+# local / secrets
+.env
+.env.*
+*.log
+*.bundle
+
+# tooling
+.superpowers/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

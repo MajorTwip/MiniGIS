@@ -247,15 +247,15 @@
 </div>
 
 <style>
-  :global(html, body) { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
   :global(#app) { height: 100%; }
   .app { display: flex; flex-direction: column; height: 100%; }
-  header { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; height: 48px; background: #1f3a5f; color: #fff; flex: none; }
-  header h1 { font-size: 18px; margin: 0; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; height: 52px; background: var(--sidebar); border-bottom: 1px solid var(--border); flex: none; }
+  header h1 { font-size: 17px; font-weight: 650; margin: 0; display: flex; align-items: center; gap: 10px; letter-spacing: -0.01em; }
+  header h1::before { content: ''; width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--primary), oklch(0.432 0.232 292.759)); box-shadow: var(--shadow); }
   .body { display: flex; flex: 1; min-height: 0; }
-  .sidebar { width: 280px; flex: none; border-right: 1px solid #ccc; padding: 12px; overflow: auto; background: #f7f7f7; box-sizing: border-box; }
+  .sidebar { width: 280px; flex: none; border-right: 1px solid var(--border); padding: 14px 12px; overflow: auto; background: var(--sidebar); box-sizing: border-box; }
   .mapwrap { flex: 1; min-width: 0; position: relative; display: flex; }
   .map { flex: 1; min-width: 0; }
-  .panel { width: 340px; flex: none; border-left: 1px solid #ccc; padding: 12px; overflow: auto; box-sizing: border-box; }
-  .error { color: #b00020; }
+  .panel { width: 340px; flex: none; border-left: 1px solid var(--border); padding: 14px; overflow: auto; box-sizing: border-box; background: var(--card); }
+  .error { color: var(--destructive-foreground); }
 </style>

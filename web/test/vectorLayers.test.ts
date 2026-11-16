@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { LayerDef } from '@minigis/shared';
-import { createVectorLayer, styleFor } from '../src/map/vectorLayers';
+import Feature from 'ol/Feature';
+import { createVectorLayer, legendEntries, styleFor, symbolFor } from '../src/map/vectorLayers';
 
 const point: LayerDef = {
   title: 'Abfallcontainer',
@@ -60,5 +61,65 @@ describe('createVectorLayer load errors', () => {
     const layer = createVectorLayer('abfallcontainer', point, (m) => messages.push(m));
     layer.getSource()!.dispatchEvent('featuresloaderror');
     expect(messages).toEqual(['Ebene Abfallcontainer konnte nicht geladen werden']);
+  });
+});
+
+const typed: LayerDef = {
+  ...point,
+  style: {
+    color: '#2e7d32',
+    radius: 7,
+    symbolBy: 'typ',
+    symbols: {
+      Glas: { shape: 'circle', color: '#2e7d32' },
+      Papier: { shape: 'square', color: '#1e88e5' },
+      Neophyten: { shape: 'star', color: '#d81b60' },
+    },
+  },
+  attributes: [
+    { name: 'nummer', type: 'text' },
+    { name: 'typ', type: 'select', options: ['Glas', 'Papier', 'Neophyten', 'Schlamm'] },
+  ],
+};
+const withTyp = (typ: string | null) => new Feature({ typ });
+
+describe('symbols by attribute', () => {
+  it('symbolFor picks the configured symbol for the value', () => {
+    expect(symbolFor(typed, 'Papier')).toEqual({ shape: 'square', color: '#1e88e5' });
+  });
+
+  it('symbolFor falls back to a circle in the layer colour', () => {
+    expect(symbolFor(typed, 'Schlamm')).toEqual({ shape: 'circle', color: '#2e7d32' });
+    expect(symbolFor(typed, null)).toEqual({ shape: 'circle', color: '#2e7d32' });
+    expect(symbolFor(point, 'x')).toEqual({ shape: 'circle', color: '#2e7d32' });
+  });
+
+  it('draws a square for Papier in its colour', () => {
+    const image = styleFor(typed, false, withTyp('Papier')).getImage() as any;
+    expect(image.getPoints()).toBe(4);
+    expect(image.getFill().getColor()).toBe('#1e88e5');
+  });
+
+  it('draws a star with an inner radius for Neophyten', () => {
+    const image = styleFor(typed, false, withTyp('Neophyten')).getImage() as any;
+    expect(image.getPoints()).toBe(5);
+    expect(image.getRadius2()).toBeLessThan(image.getRadius());
+  });
+
+  it('keeps circles as circles and grows symbols when selected', () => {
+    const normal = styleFor(typed, false, withTyp('Glas')).getImage() as any;
+    const selected = styleFor(typed, true, withTyp('Glas')).getImage() as any;
+    expect(normal.getRadius()).toBe(7);
+    expect(selected.getRadius()).toBeGreaterThan(7);
+  });
+
+  it('legendEntries lists every option in order with its symbol', () => {
+    expect(legendEntries(typed).map((e) => [e.value, e.symbol.shape])).toEqual([
+      ['Glas', 'circle'],
+      ['Papier', 'square'],
+      ['Neophyten', 'star'],
+      ['Schlamm', 'circle'],
+    ]);
+    expect(legendEntries(point)).toEqual([]);
   });
 });

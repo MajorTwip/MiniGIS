@@ -43,7 +43,16 @@ It creates a container `E2E-1` in the real data volume, reloads and selects it a
 
 1. Put `config/minigis.yaml` and an empty `data/` directory next to `docker-compose.yml`. The image runs as user `node` (uid 1000), so `chown 1000:1000 data`.
 2. In `docker-compose.yml` uncomment the Traefik labels (router rule `Host(\`minigis.example.ch\`)`, `entrypoints=websecure`, `tls=true`, `middlewares=authentik@docker`, `loadbalancer.server.port=8080`) and attach the service to the Traefik network.
-3. `docker compose up -d --build`. No port is published; Traefik is the only way in.
+3. `docker compose pull && docker compose up -d`. This uses the image `ghcr.io/majortwip/minigis:latest`, which GitHub Actions builds on every push to `main`. No port is published; Traefik is the only way in. To update later, run the same command again.
+
+### Continuous integration
+
+`.github/workflows/build_push.yml` runs on pull requests, pushes to `main`, and `v*` tags:
+
+- **test**: `npm ci`, `npm run build`, `npm test`.
+- **build-and-push-image** (only after the tests pass): builds the Docker image. On a pull request it only builds and pushes nothing. On `main` it pushes `ghcr.io/majortwip/minigis` with the tags `latest` and `sha-<short>`. A tag `v1.2.3` also pushes `1.2.3` and `1.2`, plus a build provenance attestation.
+
+If the package is private, log in on the server once with `docker login ghcr.io` using a personal access token that has `read:packages`, or make the package public under the repository's *Packages* settings.
 
 Authentik forwards the user name in `X-Authentik-Username`; change `app.userHeader` if your outpost uses another header.
 
@@ -131,6 +140,8 @@ Layer ids and attribute names match `^[a-z][a-z0-9_]*$`.
 | `style.color` | CSS colour | | stroke / point colour |
 | `style.fill` | CSS colour, optional | | polygon fill |
 | `style.radius` | number > 0, optional | | point radius in px |
+| `style.symbolBy` | attribute name, optional | | point layers: a `select` attribute whose value picks the symbol |
+| `style.symbols` | map value → `{ shape, color }`, optional | | symbol per value; `shape` is one of `circle`, `square`, `diamond`, `triangle`, `triangle-down`, `pentagon`, `hexagon`, `star`. Values without an entry are drawn as a circle in `style.color`. The layer tree shows a legend while the layer is visible. |
 | `label` | attribute name, optional | | attribute shown as map label and panel title |
 | `attributes` | list | | see below |
 

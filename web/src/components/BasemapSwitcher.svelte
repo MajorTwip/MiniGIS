@@ -20,6 +20,5 @@
 </label>
 
 <style>
-  .switcher { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-  select { padding: 4px 8px; font: inherit; }
+  .switcher { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted-foreground); }
 </style>

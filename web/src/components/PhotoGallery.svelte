@@ -201,28 +201,27 @@
 {/if}
 
 <style>
-  .gallery { margin-top: 16px; border-top: 1px solid #ddd; padding-top: 8px; }
+  .gallery { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 10px; }
   h3 { font-size: 14px; margin: 0 0 8px; }
-  .hint { font-size: 12px; color: #666; margin: 4px 0; }
+  .hint { font-size: 12px; color: var(--muted-foreground); margin: 4px 0; }
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .item { position: relative; }
-  .thumb { display: block; width: 100%; aspect-ratio: 1; padding: 0; border: 1px solid #ccc; background: #eee; cursor: pointer; overflow: hidden; }
+  .thumb { display: block; width: 100%; aspect-ratio: 1; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--muted); overflow: hidden; }
   .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .del { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; padding: 0; line-height: 1; border: none; border-radius: 50%; background: rgba(0, 0, 0, 0.65); color: #fff; font-size: 16px; cursor: pointer; }
-  .drop { margin-top: 10px; border: 2px dashed #bbb; border-radius: 4px; padding: 8px; text-align: center; font-size: 12px; }
-  .drop.dragging { border-color: #1f3a5f; background: #eef3fa; }
+  .del { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; padding: 0; line-height: 1; border: none; border-radius: 50%; background: oklch(0 0 0 / 65%); color: #fff; font-size: 16px; }
+  .drop { margin-top: 10px; border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 8px; text-align: center; font-size: 12px; color: var(--muted-foreground); }
+  .drop.dragging { border-color: var(--primary); background: var(--primary-soft); }
   .drop p { margin: 0 0 6px; }
   .drop input { max-width: 100%; font-size: 12px; }
-  .progress { font-size: 12px; color: #1f3a5f; margin: 6px 0; }
-  .error { color: #b00020; font-size: 13px; margin: 6px 0; }
-  .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); display: flex; align-items: center; justify-content: center; z-index: 200; }
-  .overlay img { max-width: 92vw; max-height: 92vh; object-fit: contain; }
-  .close { position: absolute; top: 16px; right: 20px; width: 36px; height: 36px; border: none; border-radius: 50%; background: #fff; font-size: 24px; line-height: 1; cursor: pointer; }
-  .backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); display: flex; align-items: center; justify-content: center; z-index: 300; }
-  .dialog { background: #fff; border-radius: 6px; padding: 16px 20px; width: 340px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); }
+  .progress { font-size: 12px; color: var(--primary-text); margin: 6px 0; }
+  .error { color: var(--destructive-foreground); font-size: 13px; margin: 6px 0; }
+  .overlay { position: fixed; inset: 0; background: oklch(0 0 0 / 85%); display: flex; align-items: center; justify-content: center; z-index: 200; }
+  .overlay img { max-width: 92vw; max-height: 92vh; object-fit: contain; border-radius: var(--radius-sm); }
+  .close { position: absolute; top: 16px; right: 20px; width: 36px; height: 36px; padding: 0; border-radius: 50%; background: var(--card); font-size: 24px; line-height: 1; }
+  .backdrop { position: fixed; inset: 0; background: var(--overlay); display: flex; align-items: center; justify-content: center; z-index: 300; }
+  .dialog { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; width: 340px; box-shadow: var(--shadow); }
   .dialog h3 { font-size: 16px; }
   .dialog p { margin: 0 0 12px; font-size: 14px; word-break: break-all; }
   .actions { display: flex; gap: 8px; justify-content: flex-end; }
-  .actions button { padding: 4px 12px; font: inherit; cursor: pointer; }
-  .danger { background: #b00020; color: #fff; border: 1px solid #8e001a; border-radius: 3px; }
+  .actions button { padding: 4px 12px; }
 </style>

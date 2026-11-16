@@ -46,3 +46,60 @@ describe('configSchema', () => {
     expect(configSchema.safeParse(raw).success).toBe(false);
   });
 });
+
+describe('symbol styling by attribute', () => {
+  const layerWith = (style: Record<string, unknown>) => ({
+    app: { title: 'T' },
+    map: { center: [2600000, 1200000], zoom: 10 },
+    basemaps: [{ id: 'b', title: 'B', layer: 'x', default: true }],
+    tree: [{ layer: 'c' }],
+    layers: {
+      c: {
+        title: 'C',
+        geometry: 'point',
+        style: { color: '#000', ...style },
+        attributes: [
+          { name: 'typ', type: 'select', options: ['Glas', 'Papier'] },
+          { name: 'nummer', type: 'text' },
+        ],
+      },
+    },
+  });
+
+  it('accepts symbols keyed by select options', () => {
+    const r = configSchema.safeParse(
+      layerWith({ symbolBy: 'typ', symbols: { Glas: { shape: 'star', color: '#0a0' }, Papier: { shape: 'square', color: '#00f' } } }),
+    );
+    expect(r.success).toBe(true);
+  });
+
+  it('rejects symbolBy pointing at a non-select attribute', () => {
+    const r = configSchema.safeParse(layerWith({ symbolBy: 'nummer', symbols: {} }));
+    expect(r.success).toBe(false);
+    expect(JSON.stringify(r.error?.issues)).toMatch(/symbolBy/);
+  });
+
+  it('rejects a symbol for a value that is not an option', () => {
+    const r = configSchema.safeParse(layerWith({ symbolBy: 'typ', symbols: { Blech: { shape: 'circle', color: '#000' } } }));
+    expect(r.success).toBe(false);
+    expect(JSON.stringify(r.error?.issues)).toMatch(/Blech/);
+  });
+
+  it('rejects an unknown shape', () => {
+    const r = configSchema.safeParse(layerWith({ symbolBy: 'typ', symbols: { Glas: { shape: 'blob', color: '#000' } } }));
+    expect(r.success).toBe(false);
+  });
+
+  it('the example config gives each container type its own symbol', () => {
+    const cfg = configSchema.parse(load());
+    const layer = cfg.layers.abfallcontainer;
+    const options = layer.attributes.find((a) => a.name === 'typ')!.options!;
+    expect(options).toEqual(
+      expect.arrayContaining(['Gebührensäcke', 'Abfall Gemeinde', 'Neophyten', 'Schlamm']),
+    );
+    expect(layer.style.symbolBy).toBe('typ');
+    for (const o of options) expect(layer.style.symbols?.[o]).toBeDefined();
+    const keys = new Set(options.map((o) => `${layer.style.symbols![o].shape}|${layer.style.symbols![o].color}`));
+    expect(keys.size).toBe(options.length);
+  });
+});
