@@ -1,4 +1,5 @@
 import 'ol/ol.css';
+import './theme.css';
 import { mount } from 'svelte';
 import App from './App.svelte';
 

@@ -85,16 +85,15 @@
 {/if}
 
 <style>
-  .toolbar { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 10; background: #fff; border: 1px solid #bbb; border-radius: 4px; padding: 6px 8px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2); width: max-content; max-width: calc(100% - 120px); }
+  .toolbar { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 10; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 8px; box-shadow: var(--shadow); width: max-content; max-width: calc(100% - 120px); }
   .row { display: flex; align-items: center; gap: 6px; }
-  .layer { font-weight: 600; font-size: 13px; margin-right: 4px; white-space: nowrap; }
-  .hint { font-size: 12px; color: #555; margin: 6px 0 0; max-width: 340px; }
-  button { padding: 4px 12px; font: inherit; cursor: pointer; }
-  .backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); display: flex; align-items: center; justify-content: center; z-index: 100; }
-  .dialog { background: #fff; border-radius: 6px; padding: 16px 20px; width: 340px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); }
+  .layer { font-weight: 600; font-size: 13px; margin: 0 6px 0 4px; white-space: nowrap; color: var(--primary-text); }
+  .hint { font-size: 12px; color: var(--muted-foreground); margin: 6px 4px 0; max-width: 340px; }
+  button { padding: 4px 12px; }
+  .backdrop { position: fixed; inset: 0; background: var(--overlay); display: flex; align-items: center; justify-content: center; z-index: 100; }
+  .dialog { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; width: 340px; box-shadow: var(--shadow); }
   .dialog h3 { margin: 0 0 8px; font-size: 16px; }
   .dialog p { margin: 0 0 12px; font-size: 14px; }
-  .error { color: #b00020; }
+  .error { color: var(--destructive-foreground); }
   .actions { display: flex; gap: 8px; justify-content: flex-end; }
-  .danger { background: #b00020; color: #fff; border: 1px solid #8e001a; border-radius: 3px; }
 </style>

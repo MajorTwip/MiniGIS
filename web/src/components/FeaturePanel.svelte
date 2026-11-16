@@ -64,9 +64,8 @@
 <style>
   h2 { font-size: 16px; margin: 0 0 12px; }
   dl { margin: 0; }
-  dt { font-size: 12px; color: #666; margin-top: 8px; }
+  dt { font-size: 12px; color: var(--muted-foreground); margin-top: 8px; }
   dd { margin: 2px 0 0; }
   .multiline { white-space: pre-wrap; }
-  .meta { font-size: 11px; color: #777; margin: 16px 0; }
-  .primary { padding: 6px 14px; font: inherit; cursor: pointer; }
+  .meta { font-size: 11px; color: var(--muted-foreground); margin: 16px 0; }
 </style>
