@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import gdal from 'gdal-async';
@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { AppConfig } from '@minigis/shared';
 import { loadConfig } from '../src/config.js';
 import { Mutex, openGpkg, syncSchema } from '../src/storage/db.js';
+import { FeatureStore } from '../src/storage/features.js';
 
 const CONFIG_PATH = new URL('../../config/minigis.yaml', import.meta.url).pathname;
 
@@ -164,3 +165,44 @@ describe('Mutex', () => {
     expect(log).toEqual(['a start', 'a end', 'b start', 'b end']);
   });
 });
+
+/**
+ * A copy of only the .gpkg file (without -wal/-shm), e.g. downloaded from the live
+ * Docker volume, must still be a complete GeoPackage.
+ */
+describe('main file is self-contained while the app runs', () => {
+  function openCopyOfMainFile(): gdal.Dataset {
+    const copy = join(dir, 'copy.gpkg');
+    copyFileSync(file, copy);
+    return gdal.open(copy, 'r', 'GPKG');
+  }
+
+  it('contains the schema after syncSchema', async () => {
+    const ds = await openGpkg(file);
+    syncSchema(ds, config);
+    const copy = openCopyOfMainFile();
+    expect(copy.layers.map((l) => l.name)).toEqual(expect.arrayContaining(['abfallcontainer', 'neophyten', 'photos']));
+    copy.close();
+    ds.close();
+  });
+
+  it('contains a feature right after it was written', async () => {
+    const ds = await openGpkg(file);
+    syncSchema(ds, config);
+    const store = new FeatureStore(ds, config, new Mutex());
+    const point = { type: 'Point' as const, coordinates: [2600000, 1200000] };
+    const a = await store.create('abfallcontainer', { geometry: point, properties: { nummer: 'A1' } }, 'u');
+    await store.create('abfallcontainer', { geometry: point, properties: { nummer: 'A2' } }, 'u');
+    // reads in between must not leave a statement open that blocks the checkpoint
+    await store.list('abfallcontainer');
+    await store.get('abfallcontainer', Number(a.id));
+    await store.update('abfallcontainer', Number(a.id), { properties: { nummer: 'B1' } }, 'u');
+    const copy = openCopyOfMainFile();
+    const layer = copy.layers.get('abfallcontainer');
+    expect(layer.features.count()).toBe(2);
+    expect(layer.features.get(Number(a.id)).fields.get('nummer')).toBe('B1');
+    copy.close();
+    ds.close();
+  });
+});
+
