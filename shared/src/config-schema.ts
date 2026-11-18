@@ -86,6 +86,8 @@ const layerSchema = z
     photos: z.boolean().default(false),
     style: styleSchema,
     label: z.string().optional(),
+    /** Offer snapping to swisstopo road geometries while drawing and reshaping. */
+    snapToRoads: z.boolean().default(false),
     attributes: z.array(attributeSchema),
   })
   .superRefine((l, ctx) => {
@@ -147,6 +149,59 @@ function treeLayers(nodes: TreeNode[], out: string[] = []): string[] {
   return out;
 }
 
+const basemapBase = {
+  id: z.string(),
+  title: z.string(),
+  default: z.boolean().optional(),
+};
+
+/** swisstopo WMTS raster layer in EPSG:2056, e.g. `ch.swisstopo.pixelkarte-farbe`. */
+const wmtsBasemapSchema = z.object({ ...basemapBase, layer: z.string() }).strict();
+/** Mapbox/MapLibre style JSON URL of a vector tile map, e.g. swisstopo's light base map. */
+const vectorBasemapSchema = z.object({ ...basemapBase, style: z.string().url() }).strict();
+const basemapSchema = z.union([wmtsBasemapSchema, vectorBasemapSchema]);
+export type BasemapDef = z.infer<typeof basemapSchema>;
+
+export const SWISSTOPO_BASE_TILEJSON =
+  'https://vectortiles.geo.admin.ch/tiles/ch.swisstopo.base.vt/v1.0.0/tiles.json';
+
+/** swisstopo `transportation` classes that are not roads (rail, lifts, ferries, foot paths). */
+export const DEFAULT_SNAP_EXCLUDE = [
+  'rail',
+  'rail_construction',
+  'transit',
+  'transit_construction',
+  'ferry',
+  'car_ferry',
+  'cable_car',
+  'chair_lift',
+  'gondola',
+  'drag_lift',
+  'aerialway_transportation',
+  'aerialway_closed',
+  'aerialway_goods',
+  'goods_conveyor',
+  'mask_terrain',
+  'path',
+  'path_construction',
+  'footway',
+  'footway_construction',
+  'trail',
+  'via_ferrata',
+] as const;
+
+const snappingSchema = z
+  .object({
+    /** TileJSON of the vector tileset that holds the roads. */
+    tilejson: z.string().url().default(SWISSTOPO_BASE_TILEJSON),
+    /** Vector tile layer with the road lines. */
+    sourceLayer: z.string().default('transportation'),
+    /** Values of the `class` property that are not snapped to. */
+    exclude: z.array(z.string()).default([...DEFAULT_SNAP_EXCLUDE]),
+  })
+  .strict();
+export type SnappingConfig = z.infer<typeof snappingSchema>;
+
 export const configSchema = z
   .object({
     app: z
@@ -160,14 +215,8 @@ export const configSchema = z
       center: z.tuple([z.number(), z.number()]),
       zoom: z.number(),
     }),
-    basemaps: z.array(
-      z.object({
-        id: z.string(),
-        title: z.string(),
-        layer: z.string(),
-        default: z.boolean().optional(),
-      }),
-    ),
+    basemaps: z.array(basemapSchema),
+    snapping: snappingSchema.default({}),
     tree: z.array(treeNodeSchema),
     layers: z.record(z.string().regex(ID_RE, idMessage), layerSchema),
   })

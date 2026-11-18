@@ -12,11 +12,12 @@
   "dependencies": {
     "@minigis/shared": "*",
     "ol": "^10.3.0",
+    "ol-mapbox-style": "^13.9.0",
     "proj4": "^2.15.0"
   },
   "devDependencies": {
-    "@types/geojson": "^7946.0.16",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@types/geojson": "^7946.0.16",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "vite": "^6.0.0"

@@ -6,6 +6,7 @@ const abfallcontainer: LayerDef = {
   title: 'Abfallcontainer',
   geometry: 'point',
   photos: true,
+  snapToRoads: false,
   style: { color: '#2e7d32', radius: 7 },
   label: 'nummer',
   attributes: [
@@ -21,6 +22,7 @@ const misc: LayerDef = {
   title: 'Misc',
   geometry: 'polygon',
   photos: false,
+  snapToRoads: false,
   style: { color: '#000' },
   attributes: [
     { name: 'flaeche', type: 'number' },

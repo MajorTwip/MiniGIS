@@ -8,6 +8,7 @@ import GeoJSON from 'ol/format/GeoJSON';
 import Draw from 'ol/interaction/Draw';
 import Modify from 'ol/interaction/Modify';
 import Translate from 'ol/interaction/Translate';
+import Snap from 'ol/interaction/Snap';
 import type Interaction from 'ol/interaction/Interaction';
 import type { Geometry } from 'ol/geom';
 import type { Geometry as GeoJSONGeometry } from 'geojson';
@@ -37,6 +38,9 @@ export class EditController {
   /** Shows a finished sketch until the new feature is saved or cancelled. */
   private sketch: VectorLayer<VectorSource<Feature>>;
   private modified: { feature: Feature; original: Geometry | undefined } | null = null;
+  /** Geometries to snap to while drawing or modifying; null = no snapping. */
+  private snapSource: VectorSource<Feature> | null = null;
+  private snap: Snap | null = null;
 
   constructor(
     private map: Map,
@@ -55,10 +59,14 @@ export class EditController {
     draw.on('drawend', (e) => {
       // Remove after the current event: the double-click that finishes a line or
       // polygon must still be swallowed by Draw, not zoom the map.
-      setTimeout(() => this.remove(draw));
+      setTimeout(() => {
+        this.remove(draw);
+        this.updateSnap();
+      });
       onDone(e.feature.getGeometry()!);
     });
     this.add(draw);
+    this.updateSnap();
   }
 
   /** Move vertices or the whole feature; `cancel()` restores the original geometry. */
@@ -69,6 +77,38 @@ export class EditController {
     // Translate first so Modify (added later, handled first) wins near vertices and edges.
     this.add(new Translate({ features, layers: [this.layer] }));
     this.add(new Modify({ features }));
+    this.updateSnap();
+  }
+
+  /**
+   * Snap vertices to the features of `source` while drawing or modifying, or turn
+   * snapping off with null. Takes effect immediately, also during an operation.
+   */
+  setSnapSource(source: VectorSource<Feature> | null): void {
+    this.snapSource = source;
+    this.updateSnap();
+  }
+
+  /** True while a Snap interaction is active on the map. */
+  get snapping(): boolean {
+    return this.snap !== null;
+  }
+
+  /** True while a draw or modify operation is running. */
+  get active(): boolean {
+    return this.interactions.length > 0;
+  }
+
+  /** Snap must be the last interaction added so it sees pointer events first. */
+  private updateSnap(): void {
+    if (this.snap) {
+      this.map.removeInteraction(this.snap);
+      this.snap = null;
+    }
+    if (this.snapSource && this.interactions.length > 0) {
+      this.snap = new Snap({ source: this.snapSource });
+      this.map.addInteraction(this.snap);
+    }
   }
 
   /** Abort the current operation and discard geometry changes. */
@@ -98,5 +138,6 @@ export class EditController {
   private removeInteractions(): void {
     for (const i of this.interactions) this.map.removeInteraction(i);
     this.interactions = [];
+    this.updateSnap();
   }
 }

@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import Map from 'ol/Map';
   import View from 'ol/View';
-  import type TileLayer from 'ol/layer/Tile';
+  import type BaseLayer from 'ol/layer/Base';
   import { registerLv95 } from './map/projection';
   import { createBasemapLayer } from './map/basemaps';
   import { api } from './api';
@@ -11,6 +11,7 @@
   import type { AppConfig, AttributeValue } from '@minigis/shared';
   import { createVectorLayer, styleFor } from './map/vectorLayers';
   import { EditController, readApiFeature, toGeoJSONGeometry } from './map/editing';
+  import { RoadSnapper, type SnapStatus } from './map/roadSnapping';
   import { initialFormValues } from './form';
   import BasemapSwitcher from './components/BasemapSwitcher.svelte';
   import LayerTree from './components/LayerTree.svelte';
@@ -37,7 +38,51 @@
   let controller: EditController | null = null;
   let map: Map | null = null;
   const vectorLayers = new globalThis.Map<string, ReturnType<typeof createVectorLayer>>();
-  const baseLayers = new globalThis.Map<string, TileLayer<any>>();
+  const baseLayers = new globalThis.Map<string, BaseLayer>();
+
+  const SNAP_PREF = 'minigis.snapToRoads';
+  function readSnapPref(): boolean {
+    try {
+      return localStorage.getItem(SNAP_PREF) !== 'off';
+    } catch {
+      return true;
+    }
+  }
+  let snapEnabled = $state(readSnapPref());
+  let snapStatus = $state<SnapStatus>('idle');
+  let roadSnapper: RoadSnapper | null = null;
+
+  function pushLoadError(m: string) {
+    if (!loadErrors.includes(m)) loadErrors = [...loadErrors, m];
+  }
+
+  /** Road snapping applies to the edit layer when configured and switched on. */
+  function snapWanted(): boolean {
+    return !!(snapEnabled && editLayer && config?.layers[editLayer].snapToRoads && roadSnapper);
+  }
+
+  function applySnap() {
+    controller?.setSnapSource(snapWanted() ? roadSnapper!.source : null);
+    loadRoadsForView();
+  }
+
+  /** Fetch road geometries for the current view while drawing or reshaping with snapping on. */
+  function loadRoadsForView() {
+    if (!map || !snapWanted() || !controller?.active) return;
+    const size = map.getSize();
+    if (!size) return;
+    roadSnapper!.load(map.getView().calculateExtent(size));
+  }
+
+  function setSnapEnabled(on: boolean) {
+    snapEnabled = on;
+    try {
+      localStorage.setItem(SNAP_PREF, on ? 'on' : 'off');
+    } catch {
+      // private mode or blocked storage: the choice just isn't remembered
+    }
+    applySnap();
+  }
 
   function selectBasemap(id: string) {
     activeBasemap = id;
@@ -60,6 +105,7 @@
     cancelEdit();
     editLayer = id;
     controller = id ? new EditController(map!, vectorLayers.get(id)!, config!.layers[id].geometry) : null;
+    applySnap();
   }
 
   function cancelEdit() {
@@ -73,6 +119,7 @@
     clearSelection();
     edit = { mode: 'draw' };
     controller!.startDraw((geometry) => (edit = { mode: 'create', geometry }));
+    loadRoadsForView();
   }
 
   function startEdit() {
@@ -80,6 +127,7 @@
     cancelEdit();
     edit = { mode: 'update', feature: selection.feature };
     controller!.startModify(selection.feature);
+    loadRoadsForView();
   }
 
   async function saveEdit(values: Record<string, AttributeValue>) {
@@ -148,13 +196,13 @@
     }
     const projection = registerLv95();
     for (const b of config.basemaps) {
-      const layer = createBasemapLayer(b);
-      baseLayers.set(b.id, layer);
+      baseLayers.set(b.id, createBasemapLayer(b, pushLoadError));
     }
     for (const [id, def] of Object.entries(config.layers)) {
-      vectorLayers.set(id, createVectorLayer(id, def, (m) => {
-        if (!loadErrors.includes(m)) loadErrors = [...loadErrors, m];
-      }));
+      vectorLayers.set(id, createVectorLayer(id, def, pushLoadError));
+    }
+    if (Object.values(config.layers).some((l) => l.snapToRoads)) {
+      roadSnapper = new RoadSnapper(config.snapping, (s) => (snapStatus = s));
     }
     map = new Map({
       target: mapEl,
@@ -175,6 +223,7 @@
       if (hit) select(hit.layerId, hit.feature);
       else clearSelection();
     });
+    map.on('moveend', loadRoadsForView);
     selectBasemap((config.basemaps.find((b) => b.default) ?? config.basemaps[0]).id);
   }
 </script>
@@ -212,6 +261,9 @@
           onedit={startEdit}
           ondelete={deleteSelected}
           oncancel={cancelEdit}
+          snap={config.layers[editLayer].snapToRoads
+            ? { enabled: snapEnabled, status: snapStatus, ontoggle: setSnapEnabled }
+            : null}
         />
       {/if}
     </div>

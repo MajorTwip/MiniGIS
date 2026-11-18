@@ -4,7 +4,7 @@ A small web GIS for a municipality (default: Brenzikofen, CH). Layers, attribute
 
 - Stack: TypeScript monorepo (`shared`, `server` = Fastify + gdal-async + sharp, `web` = Vite + Svelte 5 + OpenLayers).
 - Storage: one GeoPackage (`/data/minigis.gpkg`, WAL mode) plus photo files (`/data/photos/<layer>/<fid>/<uuid>.<ext>`, thumbnails `<uuid>.thumb.jpg`).
-- All geometry is EPSG:2056 (LV95) in storage, API and map. Basemaps are swisstopo WMTS.
+- All geometry is EPSG:2056 (LV95) in storage, API and map. Basemaps are swisstopo vector tiles (Web Mercator, reprojected to LV95 in the browser) or swisstopo WMTS (LV95).
 - No authentication in the app. Run it behind Traefik + Authentik. The identity header (`app.userHeader`) is stored in the `*_by` fields and never used for access control.
 - One container, one process.
 
@@ -133,8 +133,23 @@ layers:
 | --- | --- | --- |
 | `id` | string | identifier |
 | `title` | string | label in the switcher |
-| `layer` | string | swisstopo WMTS layer id (e.g. `ch.swisstopo.pixelkarte-farbe`) |
+| `layer` | string | swisstopo WMTS layer id (e.g. `ch.swisstopo.pixelkarte-farbe`); for raster maps |
+| `style` | URL | Mapbox/MapLibre style JSON of a vector map (e.g. `https://vectortiles.geo.admin.ch/styles/ch.swisstopo.lightbasemap.vt/style.json`); for vector maps |
 | `default` | boolean, optional | initially shown (first entry if none is marked) |
+
+Each entry has either `layer` or `style`. swisstopo's vector styles are `ch.swisstopo.lightbasemap.vt` (light), `ch.swisstopo.basemap.vt` (colour) and `ch.swisstopo.imagerybasemap.vt` (aerial image with labels). A vector map's style is only downloaded the first time it is selected.
+
+### `snapping` (optional)
+
+Where the road geometries for snapping (layers with `snapToRoads: true`) come from. All keys are optional.
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `tilejson` | `https://vectortiles.geo.admin.ch/tiles/ch.swisstopo.base.vt/v1.0.0/tiles.json` | TileJSON of the vector tileset; tiles are loaded at its `maxzoom` |
+| `sourceLayer` | `transportation` | vector tile layer with the road lines |
+| `exclude` | rail, lifts, ferries and foot paths (`path`, `footway`, `trail`, …) | values of the `class` property that are not snapped to |
+
+Road tiles are loaded for the visible map only while a feature is drawn or reshaped with snapping on, and only when zoomed in far enough (at most 36 tiles); otherwise the edit toolbar asks to zoom in.
 
 ### `tree` (list of nodes)
 
@@ -155,6 +170,7 @@ Layer ids and attribute names match `^[a-z][a-z0-9_]*$`.
 | `style.symbolBy` | attribute name, optional | | point layers: a `select` attribute whose value picks the symbol |
 | `style.symbols` | map value → `{ shape, color }`, optional | | symbol per value; `shape` is one of `circle`, `square`, `diamond`, `triangle`, `triangle-down`, `pentagon`, `hexagon`, `star`. Values without an entry are drawn as a circle in `style.color`. The layer tree shows a legend while the layer is visible. |
 | `label` | attribute name, optional | | attribute shown as map label and panel title |
+| `snapToRoads` | boolean | `false` | while drawing or reshaping, vertices snap to swisstopo roads (see `snapping`). The edit toolbar shows a checkbox *An Strassen fangen* to switch it off; the choice is remembered in the browser. |
 | `attributes` | list | | see below |
 
 ### Attributes
