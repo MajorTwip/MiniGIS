@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { SnapStatus } from '../map/roadSnapping';
+
   let {
     layerTitle,
     mode,
@@ -7,6 +9,7 @@
     onedit,
     ondelete,
     oncancel,
+    snap = null,
   }: {
     layerTitle: string;
     /** Current edit operation, or null when idle. */
@@ -17,7 +20,15 @@
     /** Deletes the selected feature; a rejection is shown in the dialog. */
     ondelete: () => Promise<void>;
     oncancel: () => void;
+    /** Road snapping toggle; null hides it (layer without `snapToRoads`). */
+    snap?: { enabled: boolean; status: SnapStatus; ontoggle: (enabled: boolean) => void } | null;
   } = $props();
+
+  const SNAP_STATUS: Partial<Record<SnapStatus, string>> = {
+    loading: 'Strassen werden geladen …',
+    zoom: 'Zum Fangen an Strassen näher heranzoomen.',
+    error: 'Strassen für das Fangen konnten nicht geladen werden.',
+  };
 
   let confirming = $state(false);
   let deleting = $state(false);
@@ -66,8 +77,17 @@
     <button onclick={onnew} disabled={!!mode}>Neu</button>
     <button onclick={onedit} disabled={!!mode || !hasSelection}>Bearbeiten</button>
     <button onclick={openConfirm} disabled={!!mode || !hasSelection}>Löschen</button>
+    {#if snap}
+      <label class="snap" title="Stützpunkte beim Zeichnen und Bearbeiten an swisstopo-Strassen fangen">
+        <input type="checkbox" checked={snap.enabled} onchange={(e) => snap.ontoggle(e.currentTarget.checked)} />
+        An Strassen fangen
+      </label>
+    {/if}
   </div>
   {#if mode}<p class="hint">{HINTS[mode]}</p>{/if}
+  {#if snap?.enabled && (mode === 'draw' || mode === 'update') && SNAP_STATUS[snap.status]}
+    <p class="hint snap-status" role="status">{SNAP_STATUS[snap.status]}</p>
+  {/if}
 </div>
 
 {#if confirming}
@@ -90,6 +110,7 @@
   .layer { font-weight: 600; font-size: 13px; margin: 0 6px 0 4px; white-space: nowrap; color: var(--primary-text); }
   .hint { font-size: 12px; color: var(--muted-foreground); margin: 6px 4px 0; max-width: 340px; }
   button { padding: 4px 12px; }
+  .snap { display: flex; align-items: center; gap: 4px; font-size: 13px; margin-left: 6px; padding-left: 10px; border-left: 1px solid var(--border); white-space: nowrap; cursor: pointer; }
   .backdrop { position: fixed; inset: 0; background: var(--overlay); display: flex; align-items: center; justify-content: center; z-index: 100; }
   .dialog { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; width: 340px; box-shadow: var(--shadow); }
   .dialog h3 { margin: 0 0 8px; font-size: 16px; }

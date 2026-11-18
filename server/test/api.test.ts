@@ -67,7 +67,7 @@ describe('API', () => {
     expect((await app.inject('/api/health')).json()).toEqual({ ok: true });
     const cfg = (await app.inject('/api/config')).json();
     expect(cfg.app.title).toBe('MiniGIS Brenzikofen');
-    expect(Object.keys(cfg.layers)).toEqual(['abfallcontainer', 'neophyten']);
+    expect(Object.keys(cfg.layers)).toEqual(['abfallcontainer', 'neophyten', 'strassenzustand']);
   });
 
   it('POST records the identity header, or null without it', async () => {

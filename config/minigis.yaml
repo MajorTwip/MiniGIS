@@ -5,10 +5,21 @@ map:
   center: [2613500, 1185100]
   zoom: 15
 basemaps:
+  # Vector base maps (swisstopo, Web Mercator tiles, reprojected to LV95 in the browser)
+  - id: basiskarte-hell
+    title: Basiskarte hell
+    style: https://vectortiles.geo.admin.ch/styles/ch.swisstopo.lightbasemap.vt/style.json
+    default: true
+  - id: basiskarte
+    title: Basiskarte farbig
+    style: https://vectortiles.geo.admin.ch/styles/ch.swisstopo.basemap.vt/style.json
+  - id: luftbild-beschriftet
+    title: Luftbild mit Beschriftung
+    style: https://vectortiles.geo.admin.ch/styles/ch.swisstopo.imagerybasemap.vt/style.json
+  # Raster maps (swisstopo WMTS in LV95)
   - id: farbe
     title: Landeskarte farbig
     layer: ch.swisstopo.pixelkarte-farbe
-    default: true
   - id: grau
     title: Landeskarte grau
     layer: ch.swisstopo.pixelkarte-grau
@@ -20,6 +31,15 @@ tree:
     children:
       - layer: abfallcontainer
       - layer: neophyten
+  - group: Tiefbau
+    children:
+      - layer: strassenzustand
+# Road geometries used for snapping (layers with snapToRoads: true).
+# All keys are optional; the defaults use swisstopo's base vector tiles.
+# snapping:
+#   tilejson: https://vectortiles.geo.admin.ch/tiles/ch.swisstopo.base.vt/v1.0.0/tiles.json
+#   sourceLayer: transportation
+#   exclude: [rail, transit, ferry, path, footway, trail, ...]   # road classes not snapped to
 layers:
   abfallcontainer:
     title: Abfallcontainer
@@ -56,3 +76,18 @@ layers:
       - { name: gefunden, label: Gefunden am, type: date, required: true }
       - { name: bekaempft, label: Bekämpft, type: boolean }
       - { name: bemerkung, label: Bemerkung, type: textarea }
+  strassenzustand:
+    title: Strassenzustand
+    geometry: line
+    photos: true
+    snapToRoads: true          # vertices snap to swisstopo roads (toggle in the edit toolbar)
+    style: { color: "#ef6c00" }
+    label: strasse
+    attributes:
+      - { name: strasse,    label: Strasse,       type: text,   required: true }
+      - { name: zustand,    label: Zustand,       type: select, required: true, options: [gut, mittel, schlecht, sehr schlecht] }
+      - { name: belag,      label: Belag,         type: select, options: [Asphalt, Beton, Pflästerung, Kies, Andere] }
+      - { name: schaden,    label: Schadenbild,   type: select, options: [Risse, Schlaglöcher, Spurrinnen, Belagsablösung, Absenkung, Andere] }
+      - { name: beurteilt,  label: Beurteilt am,  type: date }
+      - { name: massnahme,  label: Massnahme,     type: textarea }
+      - { name: bemerkung,  label: Bemerkung,     type: textarea }

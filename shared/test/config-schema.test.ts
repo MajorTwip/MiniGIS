@@ -103,3 +103,45 @@ describe('symbol styling by attribute', () => {
     expect(keys.size).toBe(options.length);
   });
 });
+
+describe('vector basemaps and road snapping', () => {
+  const minimal = (extra: Record<string, unknown> = {}) => ({
+    map: { center: [2600000, 1200000], zoom: 10 },
+    basemaps: [{ id: 'b', title: 'B', layer: 'x', default: true }],
+    tree: [{ layer: 'l' }],
+    layers: { l: { title: 'L', geometry: 'line', style: { color: '#000' }, attributes: [] } },
+    ...extra,
+  });
+
+  it('accepts a vector basemap given by style URL', () => {
+    const r = configSchema.safeParse(
+      minimal({ basemaps: [{ id: 'v', title: 'V', style: 'https://example.org/style.json' }] }),
+    );
+    expect(r.success).toBe(true);
+  });
+
+  it('rejects a basemap with both layer and style, or with neither', () => {
+    const both = { id: 'v', title: 'V', layer: 'x', style: 'https://example.org/style.json' };
+    expect(configSchema.safeParse(minimal({ basemaps: [both] })).success).toBe(false);
+    expect(configSchema.safeParse(minimal({ basemaps: [{ id: 'v', title: 'V' }] })).success).toBe(false);
+  });
+
+  it('defaults snapping to the swisstopo roads and snapToRoads to false', () => {
+    const cfg = configSchema.parse(minimal());
+    expect(cfg.snapping.tilejson).toContain('vectortiles.geo.admin.ch');
+    expect(cfg.snapping.sourceLayer).toBe('transportation');
+    expect(cfg.snapping.exclude).toContain('rail');
+    expect(cfg.layers.l.snapToRoads).toBe(false);
+  });
+
+  it('the example config has Tiefbau → Strassenzustand as a snapping line layer', () => {
+    const cfg = configSchema.parse(load());
+    const tiefbau = cfg.tree.find((n) => 'group' in n && n.group === 'Tiefbau');
+    expect(tiefbau && 'group' in tiefbau && tiefbau.children).toContainEqual({ layer: 'strassenzustand' });
+    expect(cfg.layers.strassenzustand.geometry).toBe('line');
+    expect(cfg.layers.strassenzustand.title).toBe('Strassenzustand');
+    expect(cfg.layers.strassenzustand.snapToRoads).toBe(true);
+    const def = cfg.basemaps.find((b) => b.default)!;
+    expect('style' in def && def.style).toMatch(/vectortiles\.geo\.admin\.ch/);
+  });
+});

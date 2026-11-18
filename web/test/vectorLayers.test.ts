@@ -7,6 +7,7 @@ const point: LayerDef = {
   title: 'Abfallcontainer',
   geometry: 'point',
   photos: true,
+  snapToRoads: false,
   style: { color: '#2e7d32', radius: 7 },
   label: 'nummer',
   attributes: [{ name: 'nummer', type: 'text' }],
@@ -15,6 +16,7 @@ const polygon: LayerDef = {
   title: 'Neophyten',
   geometry: 'polygon',
   photos: true,
+  snapToRoads: false,
   style: { color: '#c62828', fill: 'rgba(198,40,40,0.25)' },
   attributes: [],
 };
