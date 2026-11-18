@@ -66,7 +66,19 @@ Authentik forwards the user name in `X-Authentik-Username`; change `app.userHead
 
 ### Backup and QGIS
 
-Back up the whole `./data` directory (GeoPackage and photos together, ideally with the container stopped or using `sqlite3 .backup`; WAL mode means `minigis.gpkg-wal`/`-shm` belong to the file while it runs). QGIS may open a copy of the file, or the live file read-only. Do not edit the live file in QGIS: the app holds the write lock, and QGIS edits would bypass validation and the photo bookkeeping.
+Back up the whole `./data` directory (GeoPackage and photos together).
+
+The GeoPackage runs in SQLite WAL mode. The app checkpoints after every write, so `minigis.gpkg` on its own is a complete GeoPackage between edits, and you can copy just that file to open it in QGIS or another viewer. While an edit is being saved, newer changes can still sit in `minigis.gpkg-wal`. For a copy that is guaranteed consistent, stop the container first:
+
+```sh
+docker compose stop minigis
+cp data/minigis.gpkg ~/minigis-$(date +%F).gpkg
+docker compose start minigis
+```
+
+If you copy the file while the app runs, copy `minigis.gpkg-wal` along with it (same folder, same base name); SQLite merges it the next time the file is opened.
+
+QGIS may open a copy of the file, or the live file read-only. Do not edit the live file in QGIS: the app holds the write lock, and QGIS edits would bypass validation and the photo bookkeeping.
 
 ### Config changes between restarts
 

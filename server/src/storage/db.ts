@@ -39,6 +39,20 @@ function addField(layer: gdal.Layer, name: string, type: string): void {
   layer.fields.add(new gdal.FieldDefn(name, type));
 }
 
+/**
+ * Runs a query and reads its result to the end. gdal-async only releases an SQL
+ * result layer when it is garbage collected; until the statement has run to
+ * completion it keeps a read transaction open, and that blocks WAL checkpoints.
+ */
+export function queryRows(ds: gdal.Dataset, sql: string): unknown[][] {
+  const res = ds.executeSQL(sql);
+  const rows: unknown[][] = [];
+  res?.features.forEach((f) => {
+    rows.push(f.fields.toArray());
+  });
+  return rows;
+}
+
 export function findLayer(ds: gdal.Dataset, name: string): gdal.Layer | null {
   return ds.layers.map((l) => l.name).includes(name) ? ds.layers.get(name) : null;
 }
@@ -49,11 +63,7 @@ export function findLayer(ds: gdal.Dataset, name: string): gdal.Layer | null {
  * trusting the exception.
  */
 function ensurePhotosIdIndex(ds: gdal.Dataset): void {
-  const exists = () => {
-    const res = ds.executeSQL("SELECT name FROM sqlite_master WHERE type='index' AND name='photos_id'");
-    const found = (res?.features.count() ?? 0) > 0;
-    return found;
-  };
+  const exists = () => queryRows(ds, "SELECT name FROM sqlite_master WHERE type='index' AND name='photos_id'").length > 0;
   if (exists()) return;
   try {
     ds.executeSQL('CREATE UNIQUE INDEX photos_id ON photos(id)');
@@ -67,12 +77,16 @@ export async function openGpkg(file: string): Promise<gdal.Dataset> {
   const ds = existsSync(file)
     ? gdal.open(file, 'r+', 'GPKG')
     : gdal.drivers.get('GPKG').create(file);
-  const res = ds.executeSQL('PRAGMA journal_mode=WAL');
-  const mode = String(res?.features.first()?.fields.get(0) ?? '');
+  const mode = String(queryRows(ds, 'PRAGMA journal_mode=WAL')[0]?.[0] ?? '');
   if (mode.toLowerCase() !== 'wal') {
     ds.close();
     throw new Error(`could not enable WAL journal mode on ${file} (got "${mode}")`);
   }
+  // Checkpoint on every commit. With SQLite's default (every 1000 pages) a small
+  // database keeps all changes in minigis.gpkg-wal until the app stops, so a copy of
+  // only minigis.gpkg taken while it runs has no layers or features and GeoPackage
+  // viewers reject it. Per-connection setting, so it is applied on every open.
+  queryRows(ds, 'PRAGMA wal_autocheckpoint=1');
   return ds;
 }
 
